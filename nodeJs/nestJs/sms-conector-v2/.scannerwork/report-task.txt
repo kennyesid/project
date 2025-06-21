@@ -1,0 +1,6 @@
+projectKey=sms-v2
+serverUrl=http://127.0.0.1:9000
+serverVersion=9.9.0.65466
+dashboardUrl=http://127.0.0.1:9000/dashboard?id=sms-v2
+ceTaskId=AYkCRHyEg-GvymHQS1Eh
+ceTaskUrl=http://127.0.0.1:9000/api/ce/task?id=AYkCRHyEg-GvymHQS1Eh
