@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ServiceName}}
+  namespace: {{Namespace}}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ServiceName}}
+  template:
+    metadata:
+      labels:
+        app: {{ServiceName}}
+    spec:
+      containers:
+        - name: {{ServiceName}}
+          image: {{BaseImage}}
+          ports:
+            - containerPort: {{ContainerPort}}
+          envFrom:
+            - configMapRef:
+                name: {{ServiceCfgmap}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ServiceName}}
+  namespace: {{Namespace}}
+spec:
+  selector:
+    app: {{ServiceName}}
+  ports:
+    - protocol: TCP
+      port: {{Port}}
+      targetPort: {{ContainerPort}}

@@ -1,0 +1,22 @@
+version: "3.3"
+
+services:
+  boilerplate:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+    environment:
+      - USER=${USER}
+      - PASSWORD=${PASSWORD}
+      - MONGO_URL=${MONGO_URL}
+      - MONGO_DB_NAME=${MONGO_DB_NAME}
+      - MONGO_LOG_COLLECTION=${MONGO_LOG_COLLECTION}
+    ports:
+      - "${BOILERPLATE_SERVICE_PORT}:8080"
+    container_name: boilerplate-service
+    networks:
+      - payments-service-net
+
+networks:
+  payments-service-net:
+    external: true

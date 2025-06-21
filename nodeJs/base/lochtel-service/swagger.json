@@ -1,0 +1,146 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Enrutador API",
+    "description": "API del flujo de pago de servicios para el middleware",
+    "version": "0.1.9"
+  },
+  "servers": [
+    {
+      "url": "http://{base_url}/{base_path}",
+      "description": "Staging server",
+      "variables": {
+        "base_url": {
+          "default": "172.16.1.56"
+        },
+        "port": {
+          "default": ""
+        },
+        "base_path": {
+          "default": "int/ps/router"
+        }
+      }
+    }
+  ],
+  "paths": {
+    "/v1/clientes": {
+      "post": {
+        "description": "Clientes",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/clientRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully sent"
+          },
+          "400": {
+            "$ref": "#/components/responses/400Error"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "clientRequest": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "$ref": "#/components/schemas/clientData"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/metadata"
+          }
+        }
+      },
+      "clientData": {
+        "type": "object",
+        "properties": {
+          "serviceId": {
+            "type": "number",
+            "decription": "service code",
+            "example": "623"
+          },
+          "filtro": {
+            "$ref": "#/components/schemas/ArrayOfFilters"
+          }
+        }
+      },
+      "ArrayOfFilters": {
+        "type": "array",
+        "items": {
+          "type": "object",
+          "properties": {
+            "identificador": {
+              "type": "integer"
+            },
+            "alias": {
+              "type": "string"
+            },
+            "valor": {
+              "type": "string"
+            }
+          }
+        },
+        "example": [
+          {
+            "dentificador": 3,
+            "alias": "3230",
+            "valor": "12345"
+          },
+          {
+            "identificador": 2,
+            "alias": "3235",
+            "valor": "12345"
+          }
+        ]
+      },
+      "metadata": {
+        "type": "object",
+        "description": "metadata",
+        "required": ["codUsuario", "codSucursal", "codAplicacion"],
+        "properties": {
+          "codUsuario": {
+            "type": "string",
+            "decription": "user code",
+            "example": "JBK"
+          },
+          "codSucursal": {
+            "type": "integer",
+            "decription": "branch number",
+            "example": 1
+          },
+          "codAplicacion": {
+            "type": "integer",
+            "decription": "application code",
+            "example": 7
+          }
+        }
+      }
+    },
+    "responses": {
+      "400Error": {
+        "description": "Invalid request",
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "properties": {
+                "message": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

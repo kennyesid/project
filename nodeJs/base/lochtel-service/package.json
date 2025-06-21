@@ -1,0 +1,32 @@
+{
+  "name": "lochtel-service",
+  "version": "1.0.0",
+  "description": "lochtel description",
+  "author": "jhtrigo@bg.com.bo",
+  "main": "index.js",
+  "type": "commonjs",
+  "scripts": {
+    "test": "mocha ./specs/services/*.spec.js --timeout 45000",
+    "start": "node index.js",
+    "dev": "nodemon index.js",
+    "lint": "eslint \"{src,apps,libs,test}/**/*.js\" --fix"
+  },
+  "dependencies": {
+    "axios": "^1.6.1",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.2",
+    "express-xml-bodyparser": "^0.3.0",
+    "uuid": "^9.0.1",
+    "winston": "^3.11.0",
+    "winston-mongodb": "^5.1.1",
+    "xml2json": "^0.12.0"
+  },
+  "devDependencies": {
+    "chai": "^4.2.0",
+    "chai-http": "^4.3.0",
+    "eslint": "^8.14.0",
+    "eslint-config-google": "^0.14.0",
+    "mocha": "^8.2.1",
+    "nodemon": "^2.0.7"
+  }
+}

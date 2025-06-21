@@ -1,0 +1,284 @@
+pipeline {
+    environment {
+            imagename = "bancoganadero/lochtel-service"
+            registryCredential = 'docker_hub'
+            dockerImage = ''
+    }
+
+    agent {
+        node {
+            label 'linux-builder'
+        }
+    }
+
+    options {
+        buildDiscarder logRotator(
+                    daysToKeepStr: '16',
+                    numToKeepStr: '10'
+            )
+    }
+
+    stages {
+
+        stage('Cleanup Workspace') {
+            steps {
+                cleanWs()
+                sh """
+                echo "Cleaned Up Workspace For Project"
+                """
+            }
+        }
+
+        stage('Code Checkout') {
+            steps {
+             script{
+                checkout([$class: 'GitSCM', branches: [[name: '${BRANCH_NAME}']],
+                         userRemoteConfigs: [[credentialsId: 'gitlab',
+                         url: 'git@gitlab.bg.com.bo:desarrollo/bga/integracion/lochtel-service.git']]])
+                }
+             }
+        }
+
+        stage('Sonarqube') {
+            when {
+                branch 'develop'
+            }
+            environment {
+                scannerHome = tool 'sonarqube'
+            }
+            steps {
+                withSonarQubeEnv(installationName: 'SonarQube-Prod',credentialsId: 'POC-Sonar') {
+                    sh "${scannerHome}/bin/sonar-scanner -Dsonar.projectKey=lochtel-service -Dsonar.projectName=lochtel-service -Dsonar.projectVersion=${BUILD_NUMBER} -Dsonar.language=javascript"
+                }
+                sleep 35
+                timeout(time: 10, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        stage('Building image') {
+            steps{
+                script {
+                    dockerImage = docker.build("$imagename:${BUILD_ID}.${BUILD_TIMESTAMP_SHORT}.${BRANCH_NAME}")
+                }
+            }
+        }
+
+        stage('Push Image') {
+            steps{
+                script {
+                    docker.withRegistry( '', registryCredential ) {
+                        dockerImage.push()
+                        dockerImage.push('latest')
+                    }
+                }
+            }
+        }
+
+        stage('Remove Unused docker image') {
+            steps{
+                sh "docker rmi $imagename:${BUILD_ID}.${BUILD_TIMESTAMP_SHORT}.${BRANCH_NAME}"
+                sh "docker rmi $imagename:latest"
+            }
+        }
+
+        stage('Variable replace') {
+             when {
+                        expression { BRANCH_NAME ==~ /(master|staging|develop|release.*)/ }
+             }
+             steps{
+                script {
+                    contentReplace(
+                        configs: [
+                            variablesReplaceConfig(
+                                configs: [
+                                    variablesReplaceItemConfig(
+                                        name: 'ServiceCfgmap',
+                                        value: 'lochtel-service-cfgmap'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'Namespace',
+                                        value: 'pago-servicios'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'ENABLE_LOG_REQUEST',
+                                        value: 'TRUE'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'ENABLE_LOG_TRACE',
+                                        value: 'TRUE'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'INTEGRATION_URI',
+                                        value: 'http://test.sintesis.com.bo:80/ws2.1_ws/IntegradoWSService'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'MONGO_URL',
+                                        value: 'mongodb://bgadmin:mongopass123@172.16.1.123:32247'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'MONGO_DB_NAME',
+                                        value: 'INTEGRACION'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'MONGO_LOG_COLLECTION',
+                                        value: 'PGL_TRAZAS'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'MONGO_COLLECTION_GRUPOS',
+                                        value: 'SRV_GRUPOS'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'MONGO_COLLECTION_BUSQUEDAS',
+                                        value: 'SRV_CRITERIOS_BUSQUEDA'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'MONGO_COLLECTION_PARAMETROS',
+                                        value: 'SRV_PARAMETROS'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'TOKEN_SERVICE',
+                                        value: '51247fae280c20410824977b0781453df59fad5b23bf2a0d14e884482f91e0907c3bb979ca954c6df211c1962979e0c170968851e2ecffa03a4b2c12ee5ef01c85b242bff6ec55d6d3940a0a19b9d7a3a5d42fc186de8e741def35a5ee1c79441f1ace6e3a9d2134f71ba79ae22441f6ed93bfce40679f6e1fa03f4cddf7eb45'
+                                    ),
+
+                                    variablesReplaceItemConfig(
+                                        name: 'LOCHTEL_NAME',
+                                        value: 'LOCHTEL'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'LOCHTEL_USER',
+                                        value: 'wsganadero'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'LOCHTEL_PASSWORD',
+                                        value: 'WSganadero35'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'LOCHTEL_ORIGEN_TRANSACCION',
+                                        value: 'APWS'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'MONGO_COLLECTION_LOCHTEL',
+                                        value: 'SRV_DEUDAS'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'MONGO_COLLECTION_PAGOS_LOCHTEL',
+                                        value: 'SRV_PAGOS'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'SEMAPA_NAME',
+                                        value: 'SEMAPA'
+                                    ),
+                                ],
+                                fileEncoding: 'UTF-8',
+                                filePath: './k8s/configmap.yml',
+                                variablesPrefix: '{{',
+                                variablesSuffix: '}}'
+                        )]
+                    )
+                }
+                script {
+                    contentReplace(
+                        configs: [
+                            variablesReplaceConfig(
+                                configs: [
+                                    variablesReplaceItemConfig(
+                                        name: 'ServiceCfgmap',
+                                        value: 'lochtel-service-cfgmap'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'Namespace',
+                                        value: 'pago-servicios'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'ServiceName',
+                                        value: 'lochtel-service'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'BaseImage',
+                                        value: 'bancoganadero/lochtel-service:${BUILD_ID}.${BUILD_TIMESTAMP_SHORT}.${BRANCH_NAME}'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'ContainerPort',
+                                        value: '8080'
+                                    ),
+                                    variablesReplaceItemConfig(
+                                        name: 'Port',
+                                        value: '8080'
+                                    )
+                                ],
+                                fileEncoding: 'UTF-8',
+                                filePath: './k8s/deployment.yml',
+                                variablesPrefix: '{{',
+                                variablesSuffix: '}}'
+                        )]
+                    )
+                }
+                script {
+                    contentReplace(
+                        configs: [
+                            variablesReplaceConfig(
+                                configs: [
+                                    variablesReplaceItemConfig(
+                                        name: 'Namespace',
+                                        value: 'pago-servicios'
+                                    )
+
+                                ],
+                                fileEncoding: 'UTF-8',
+                                filePath: './k8s/namespace.yml',
+                                variablesPrefix: '{{',
+                                variablesSuffix: '}}'
+                        )]
+                    )
+                }
+             }
+        }
+
+
+        stage('Build Deploy Code DEV') {
+            when {
+                branch 'develop'
+            }
+            steps {
+              script{
+                kubernetesDeploy (configs: '**/k8s/*.yml',kubeconfigId: 'kubeconfigdev')
+              }
+            }
+        }
+
+        stage('Build Deploy Code STG') {
+            when {
+                branch 'staging'
+            }
+            steps {
+              script{
+                kubernetesDeploy (configs: '**/k8s/*.yml',kubeconfigId: 'kubeconfigtest')
+              }
+            }
+        }
+
+        stage('Build Deploy Code PREPROD') {
+            when {
+                branch 'release-*'
+            }
+            steps {
+              script{
+                kubernetesDeploy (configs: '**/k8s/*.yml',kubeconfigId: 'kubeconfigpreprod')
+              }
+            }
+        }
+
+        stage('Build Deploy Code PRD') {
+            when {
+                branch 'master'
+            }
+            steps {
+              script{
+                kubernetesDeploy (configs: '**/k8s/*.yml',kubeconfigId: 'kubeconfigprod')
+              }
+            }
+        }
+    }
+}
