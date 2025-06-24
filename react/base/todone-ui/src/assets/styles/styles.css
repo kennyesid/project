@@ -1,0 +1,49 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.bg-image {
+  background-image: linear-gradient(
+      to bottom,
+      rgba(0, 51, 85, 0.6),
+      rgba(0, 26, 44, 0.9)
+    ),
+    url("../../assets/images/to-do-one-start.jpg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  height: 100vh;
+  width: 100%;
+}
+
+body {
+  font-family: "Poppins", sans-serif; /* Apply the font to the entire body */
+}
+
+.btn-main {
+  background: rgb(25, 55, 97);
+}
+
+.txt-main {
+  color: rgb(25, 55, 97);
+}
+
+.nav-main {
+  background: rgb(25, 55, 97);
+}
+
+.btn-main:hover {
+  background: rgb(35, 76, 134);
+}
+
+.column-main {
+  /* background: linear-gradient(#2d82b5, #bce6ff); 
+  background: #2d82b5;
+  background: rgb(107, 107, 107);*/
+  background: linear-gradient(
+    to bottom,
+    rgb(70, 70, 70),
+    rgb(77, 76, 76),
+    rgb(87, 86, 86)
+  );
+}
